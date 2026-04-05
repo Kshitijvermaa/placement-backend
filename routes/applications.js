@@ -10,7 +10,6 @@ router.post('/', auth, (req, res) => {
   db.query('SELECT * FROM students WHERE user_id = ?', [user_id], (err, results) => {
     if (err) return res.status(500).json({ error: err.message });
     if (results.length === 0) return res.status(404).json({ error: 'Student profile not found' });
-
     const student = results[0];
 
     db.query('SELECT * FROM applications WHERE student_id = ? AND offer_id = ?',
