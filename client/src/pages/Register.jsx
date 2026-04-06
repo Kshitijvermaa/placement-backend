@@ -1,178 +1,216 @@
 import { useState } from 'react';
-import { useNavigate, Link as RouterLink } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import {
-  Container,
-  Box,
-  Paper,
-  TextField,
-  Button,
-  Typography,
-  Link,
-  Alert,
-  FormControl,
-  InputLabel,
-  Select,
-  MenuItem,
+  Box, TextField, Button, Typography, Alert, Paper,
+  InputAdornment, IconButton, CircularProgress, Divider, Stepper, Step, StepLabel,
 } from '@mui/material';
-import { useAuth } from '../context/AuthContext';
+import {
+  Email as EmailIcon, Lock as LockIcon, Person as PersonIcon,
+  Visibility, VisibilityOff, School as SchoolIcon, CheckCircle as CheckIcon,
+} from '@mui/icons-material';
+import { authService } from '../services';
 
-const Register = () => {
-  const [formData, setFormData] = useState({
-    name: '',
-    email: '',
-    password: '',
-    confirmPassword: '',
-    role: 'student',
-  });
-  const [error, setError] = useState('');
-  const [success, setSuccess] = useState(false);
-  const [loading, setLoading] = useState(false);
+export default function Register() {
   const navigate = useNavigate();
-  const { register } = useAuth();
+  const [form, setForm] = useState({ name: '', email: '', password: '', confirmPassword: '' });
+  const [showPassword, setShowPassword] = useState(false);
+  const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [success, setSuccess] = useState(false);
 
-  const handleChange = (e) => {
-    setFormData({
-      ...formData,
-      [e.target.name]: e.target.value,
-    });
+  const handleChange = (e) => setForm({ ...form, [e.target.name]: e.target.value });
+
+  const validate = () => {
+    if (!form.name.trim()) return 'Full name is required';
+    if (!form.email.includes('@')) return 'Enter a valid email address';
+    if (form.password.length < 6) return 'Password must be at least 6 characters';
+    if (form.password !== form.confirmPassword) return 'Passwords do not match';
+    return null;
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    const validationError = validate();
+    if (validationError) { setError(validationError); return; }
     setError('');
-
-    if (formData.password !== formData.confirmPassword) {
-      setError('Passwords do not match');
-      return;
-    }
-
-    if (formData.password.length < 6) {
-      setError('Password must be at least 6 characters');
-      return;
-    }
-
     setLoading(true);
-
     try {
-      await register(formData.name, formData.email, formData.password, formData.role);
+      await authService.register(form.name, form.email, form.password);
       setSuccess(true);
-      setTimeout(() => navigate('/login'), 2000);
+      setTimeout(() => navigate('/login'), 2500);
     } catch (err) {
-      setError(err.response?.data?.error || 'Registration failed');
+      setError(err.response?.data?.error || 'Registration failed. Please try again.');
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <Container maxWidth="sm">
-      <Box
-        sx={{
-          marginTop: 8,
-          display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'center',
-        }}
-      >
-        <Paper elevation={3} sx={{ padding: 4, width: '100%' }}>
-          <Typography component="h1" variant="h4" align="center" gutterBottom>
+    <Box sx={{
+      minHeight: '100vh',
+      display: 'flex',
+      background: 'linear-gradient(135deg, #0f4c81 0%, #1565c0 50%, #0d47a1 100%)',
+      position: 'relative',
+      overflow: 'hidden',
+    }}>
+      <Box sx={{ position: 'absolute', width: 400, height: 400, borderRadius: '50%', background: 'rgba(255,255,255,0.04)', top: -100, left: -100 }} />
+      <Box sx={{ position: 'absolute', width: 300, height: 300, borderRadius: '50%', background: 'rgba(255,255,255,0.04)', bottom: -50, right: -80 }} />
+
+      {/* Left Branding */}
+      <Box sx={{
+        flex: 1, display: { xs: 'none', md: 'flex' },
+        flexDirection: 'column', justifyContent: 'center',
+        pl: 10, pr: 6,
+      }}>
+        <Box display="flex" alignItems="center" gap={1.5} mb={4}>
+          <SchoolIcon sx={{ color: 'white', fontSize: 40 }} />
+          <Typography variant="h4" sx={{ color: 'white', fontWeight: 800 }}>
             Placement Portal
           </Typography>
-          <Typography component="h2" variant="h6" align="center" color="text.secondary" gutterBottom>
-            Create Account
-          </Typography>
+        </Box>
+        <Typography variant="h2" sx={{ color: 'white', fontWeight: 800, lineHeight: 1.2, mb: 2 }}>
+          Join the<br />Community.
+        </Typography>
+        <Typography sx={{ color: 'rgba(255,255,255,0.75)', fontSize: 18, maxWidth: 380 }}>
+          Create your profile, upload your resume, and apply to internships from the best companies in the industry.
+        </Typography>
 
-          {error && (
-            <Alert severity="error" sx={{ mt: 2 }}>
-              {error}
-            </Alert>
-          )}
-
-          {success && (
-            <Alert severity="success" sx={{ mt: 2 }}>
-              Registration successful! Redirecting to login...
-            </Alert>
-          )}
-
-          <Box component="form" onSubmit={handleSubmit} sx={{ mt: 3 }}>
-            <TextField
-              margin="normal"
-              required
-              fullWidth
-              id="name"
-              label="Full Name"
-              name="name"
-              autoComplete="name"
-              autoFocus
-              value={formData.name}
-              onChange={handleChange}
-            />
-            <TextField
-              margin="normal"
-              required
-              fullWidth
-              id="email"
-              label="Email Address"
-              name="email"
-              autoComplete="email"
-              value={formData.email}
-              onChange={handleChange}
-            />
-            <TextField
-              margin="normal"
-              required
-              fullWidth
-              name="password"
-              label="Password"
-              type="password"
-              id="password"
-              value={formData.password}
-              onChange={handleChange}
-            />
-            <TextField
-              margin="normal"
-              required
-              fullWidth
-              name="confirmPassword"
-              label="Confirm Password"
-              type="password"
-              id="confirmPassword"
-              value={formData.confirmPassword}
-              onChange={handleChange}
-            />
-            <FormControl fullWidth margin="normal">
-              <InputLabel id="role-label">Role</InputLabel>
-              <Select
-                labelId="role-label"
-                id="role"
-                name="role"
-                value={formData.role}
-                label="Role"
-                onChange={handleChange}
-              >
-                <MenuItem value="student">Student</MenuItem>
-                <MenuItem value="admin">Admin</MenuItem>
-              </Select>
-            </FormControl>
-            <Button
-              type="submit"
-              fullWidth
-              variant="contained"
-              sx={{ mt: 3, mb: 2 }}
-              disabled={loading || success}
-            >
-              {loading ? 'Creating Account...' : 'Sign Up'}
-            </Button>
-            <Box sx={{ textAlign: 'center' }}>
-              <Link component={RouterLink} to="/login" variant="body2">
-                Already have an account? Sign In
-              </Link>
+        <Box mt={5} display="flex" flexDirection="column" gap={2}>
+          {[
+            'Complete your academic profile',
+            'Browse eligible offers instantly',
+            'Track all applications in one place',
+            'Get notified of interview schedules',
+          ].map((step, i) => (
+            <Box key={i} display="flex" alignItems="center" gap={1.5}>
+              <CheckIcon sx={{ color: '#4caf50', fontSize: 20 }} />
+              <Typography sx={{ color: 'rgba(255,255,255,0.85)', fontSize: 15 }}>{step}</Typography>
             </Box>
+          ))}
+        </Box>
+      </Box>
+
+      {/* Form Panel */}
+      <Box sx={{
+        width: { xs: '100%', md: 480 },
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+        p: { xs: 3, md: 6 },
+      }}>
+        <Paper elevation={0} sx={{
+          width: '100%', p: { xs: 3, md: 4.5 },
+          borderRadius: 3,
+          boxShadow: '0 20px 60px rgba(0,0,0,0.3)',
+        }}>
+          <Box sx={{ display: { xs: 'flex', md: 'none' }, alignItems: 'center', gap: 1, mb: 3 }}>
+            <SchoolIcon color="primary" />
+            <Typography variant="h6" fontWeight={700} color="primary">Placement Portal</Typography>
           </Box>
+
+          {success ? (
+            <Box textAlign="center" py={4}>
+              <CheckIcon sx={{ fontSize: 64, color: '#2d8c5e', mb: 2 }} />
+              <Typography variant="h5" fontWeight={800} gutterBottom>Account Created!</Typography>
+              <Typography color="text.secondary">Redirecting you to login...</Typography>
+            </Box>
+          ) : (
+            <>
+              <Typography variant="h5" fontWeight={800} gutterBottom>Create account</Typography>
+              <Typography variant="body2" color="text.secondary" mb={3}>
+                Register as a student to get started
+              </Typography>
+
+              {error && (
+                <Alert severity="error" sx={{ mb: 2.5 }} onClose={() => setError('')}>
+                  {error}
+                </Alert>
+              )}
+
+              <Box component="form" onSubmit={handleSubmit}>
+                <TextField
+                  fullWidth required name="name" label="Full Name"
+                  value={form.name} onChange={handleChange}
+                  InputProps={{
+                    startAdornment: (
+                      <InputAdornment position="start">
+                        <PersonIcon sx={{ color: 'text.secondary', fontSize: 20 }} />
+                      </InputAdornment>
+                    ),
+                  }}
+                  sx={{ mb: 2 }}
+                />
+                <TextField
+                  fullWidth required name="email" label="College Email" type="email"
+                  value={form.email} onChange={handleChange}
+                  InputProps={{
+                    startAdornment: (
+                      <InputAdornment position="start">
+                        <EmailIcon sx={{ color: 'text.secondary', fontSize: 20 }} />
+                      </InputAdornment>
+                    ),
+                  }}
+                  sx={{ mb: 2 }}
+                />
+                <TextField
+                  fullWidth required name="password" label="Password"
+                  type={showPassword ? 'text' : 'password'}
+                  value={form.password} onChange={handleChange}
+                  helperText="At least 6 characters"
+                  InputProps={{
+                    startAdornment: (
+                      <InputAdornment position="start">
+                        <LockIcon sx={{ color: 'text.secondary', fontSize: 20 }} />
+                      </InputAdornment>
+                    ),
+                    endAdornment: (
+                      <InputAdornment position="end">
+                        <IconButton onClick={() => setShowPassword(!showPassword)} edge="end" size="small">
+                          {showPassword ? <VisibilityOff /> : <Visibility />}
+                        </IconButton>
+                      </InputAdornment>
+                    ),
+                  }}
+                  sx={{ mb: 2 }}
+                />
+                <TextField
+                  fullWidth required name="confirmPassword" label="Confirm Password"
+                  type={showPassword ? 'text' : 'password'}
+                  value={form.confirmPassword} onChange={handleChange}
+                  error={form.confirmPassword !== '' && form.password !== form.confirmPassword}
+                  helperText={form.confirmPassword !== '' && form.password !== form.confirmPassword ? 'Passwords do not match' : ''}
+                  InputProps={{
+                    startAdornment: (
+                      <InputAdornment position="start">
+                        <LockIcon sx={{ color: 'text.secondary', fontSize: 20 }} />
+                      </InputAdornment>
+                    ),
+                  }}
+                  sx={{ mb: 3 }}
+                />
+                <Button
+                  type="submit" fullWidth variant="contained" size="large"
+                  disabled={loading}
+                  sx={{ py: 1.5, fontSize: 15, fontWeight: 700 }}
+                >
+                  {loading ? <CircularProgress size={22} color="inherit" /> : 'Create Account'}
+                </Button>
+              </Box>
+
+              <Divider sx={{ my: 3 }}>
+                <Typography variant="caption" color="text.secondary">OR</Typography>
+              </Divider>
+
+              <Box textAlign="center">
+                <Typography variant="body2" color="text.secondary">
+                  Already registered?{' '}
+                  <Link to="/login" style={{ color: '#0f4c81', fontWeight: 700, textDecoration: 'none' }}>
+                    Sign in
+                  </Link>
+                </Typography>
+              </Box>
+            </>
+          )}
         </Paper>
       </Box>
-    </Container>
+    </Box>
   );
-};
-
-export default Register;
+}
