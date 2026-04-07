@@ -16,6 +16,7 @@ import AdminDashboard from './pages/admin/Dashboard';
 import AdminCompanies from './pages/admin/Companies';
 import AdminOffers from './pages/admin/Offers';
 import AdminStudents from './pages/admin/Students';
+import ExpansionHub from './pages/admin/ExpansionHub';
 
 const theme = createTheme({
   palette: {
@@ -111,6 +112,7 @@ function App() {
               <Route path="companies" element={<AdminCompanies />} />
               <Route path="offers" element={<AdminOffers />} />
               <Route path="students" element={<AdminStudents />} />
+              <Route path="expansion" element={<ExpansionHub />} />
             </Route>
 
             <Route path="/" element={<Navigate to="/login" replace />} />

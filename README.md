@@ -85,7 +85,8 @@ placement-backend/
 │   └── auth.js                 # JWT authentication middleware
 │
 ├── migrations/
-│   └── 001_normalize_branches.sql
+│   ├── 001_normalize_branches.sql
+│   └── 002_expand_db_objects.sql
 │
 ├── uploads/
 │   └── resumes/                # Uploaded resume files
@@ -139,6 +140,7 @@ mysql -u root -p placement_db < schema.sql
 #### Run Migration
 ```bash
 mysql -u root -p placement_db < migrations/001_normalize_branches.sql
+mysql -u root -p placement_db < migrations/002_expand_db_objects.sql
 ```
 
 ### 5. Environment Configuration
@@ -293,10 +295,11 @@ After running the schema, a default admin account is created:
 ## 📝 Development Notes
 
 ### Database Migration
-The project includes a migration script to normalize the `eligible_branches` field. Run this migration if upgrading from an older schema:
+The project includes migration scripts for branch normalization and advanced database expansion. Run these if upgrading from an older schema:
 
 ```bash
 mysql -u root -p placement_db < migrations/001_normalize_branches.sql
+mysql -u root -p placement_db < migrations/002_expand_db_objects.sql
 ```
 
 ### Adding New Features

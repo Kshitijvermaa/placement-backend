@@ -10,8 +10,8 @@ import {
   Business as BusinessIcon,
   Work as WorkIcon,
   People as PeopleIcon,
+  Hub as HubIcon,
   Menu as MenuIcon,
-  AccountCircle as AccountIcon,
   Logout as LogoutIcon,
   AdminPanelSettings as AdminIcon,
 } from '@mui/icons-material';
@@ -24,6 +24,7 @@ const navItems = [
   { label: 'Companies', path: '/admin/companies', icon: <BusinessIcon /> },
   { label: 'Offers', path: '/admin/offers', icon: <WorkIcon /> },
   { label: 'Students', path: '/admin/students', icon: <PeopleIcon /> },
+  { label: 'Expansion Hub', path: '/admin/expansion', icon: <HubIcon /> },
 ];
 
 export default function AdminLayout() {

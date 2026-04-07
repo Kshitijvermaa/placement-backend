@@ -72,6 +72,7 @@ If you have an existing database with data you want to keep:
 2. **Run the migration:**
    ```cmd
    mysql -u root -p placement_db < migrations\001_normalize_branches.sql
+   mysql -u root -p placement_db < migrations\002_expand_db_objects.sql
    ```
 
 ---

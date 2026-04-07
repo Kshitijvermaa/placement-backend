@@ -1,0 +1,217 @@
+
+<style>
+  .section { margin: 0 0 28px; }
+  .section-title { font-size: 13px; font-weight: 500; color: var(--color-text-secondary); letter-spacing: .06em; text-transform: uppercase; margin: 0 0 10px; padding: 0 0 6px; border-bottom: 1px solid var(--color-border-tertiary); }
+  .row { display: flex; align-items: flex-start; gap: 10px; padding: 10px 0; border-bottom: 1px solid var(--color-border-tertiary); }
+  .row:last-child { border-bottom: none; }
+  .badge { font-size: 11px; font-weight: 500; padding: 2px 7px; border-radius: 4px; white-space: nowrap; flex-shrink: 0; margin-top: 2px; }
+  .b-table  { background: var(--color-background-info);    color: var(--color-text-info);    }
+  .b-trig   { background: var(--color-background-danger);  color: var(--color-text-danger);  }
+  .b-func   { background: var(--color-background-success); color: var(--color-text-success); }
+  .b-proc   { background: var(--color-background-warning); color: var(--color-text-warning); }
+  .b-view   { background: #EEEDFE; color: #3C3489; }
+  .info { flex: 1; min-width: 0; }
+  .name { font-family: var(--font-mono); font-size: 12px; color: var(--color-text-primary); font-weight: 500; }
+  .desc { font-size: 12px; color: var(--color-text-secondary); margin-top: 3px; line-height: 1.5; }
+  .concept { display: inline-block; font-size: 10px; font-weight: 500; padding: 1px 6px; border-radius: 3px; background: var(--color-background-secondary); color: var(--color-text-tertiary); margin-top: 4px; }
+</style>
+
+<div style="padding:16px 0">
+
+<div class="section">
+  <div class="section-title">New tables to add</div>
+
+  <div class="row">
+    <div class="badge b-table">TABLE</div>
+    <div class="info">
+      <div class="name">placement_rounds</div>
+      <div class="desc">Tracks each round of an interview process per offer — technical, HR, group discussion, case study. Has <code>round_number</code>, <code>type</code>, <code>scheduled_at</code>, <code>duration_minutes</code>, <code>max_students</code>.</div>
+      <div class="concept">1-to-many with offers · ENUM round type · CHECK constraints</div>
+    </div>
+  </div>
+
+  <div class="row">
+    <div class="badge b-table">TABLE</div>
+    <div class="info">
+      <div class="name">round_results</div>
+      <div class="desc">Records each student's result per round — pass/fail/pending, score out of 100, evaluator remarks. Links <code>application_id</code> + <code>round_id</code> with a composite PK.</div>
+      <div class="concept">Composite PK · many-to-many bridge · DECIMAL score</div>
+    </div>
+  </div>
+
+  <div class="row">
+    <div class="badge b-table">TABLE</div>
+    <div class="info">
+      <div class="name">feedback</div>
+      <div class="desc">Companies leave feedback on students after selection/rejection. Rating 1–5, comments, anonymous flag. Useful for analytics and student improvement.</div>
+      <div class="concept">FK to applications · CHECK rating 1–5 · BOOLEAN</div>
+    </div>
+  </div>
+
+  <div class="row">
+    <div class="badge b-table">TABLE</div>
+    <div class="info">
+      <div class="name">documents</div>
+      <div class="desc">Stores multiple documents per student — resume versions, NOC, offer letter, ID proof. Has <code>doc_type ENUM</code>, <code>file_path</code>, <code>verified BOOLEAN</code>, <code>uploaded_at</code>.</div>
+      <div class="concept">1-to-many with students · ENUM doc_type · versioning</div>
+    </div>
+  </div>
+
+  <div class="row">
+    <div class="badge b-table">TABLE</div>
+    <div class="info">
+      <div class="name">placement_stats</div>
+      <div class="desc">Materialized summary table updated by a trigger — total placed, avg stipend, max stipend per branch per year. Used for dashboard analytics without expensive live aggregation.</div>
+      <div class="concept">Denormalized analytics · updated by trigger · GROUP BY source</div>
+    </div>
+  </div>
+
+  <div class="row">
+    <div class="badge b-table">TABLE</div>
+    <div class="info">
+      <div class="name">blacklist</div>
+      <div class="desc">Admin can blacklist a student from applying (e.g. misconduct). Has <code>student_id</code>, <code>reason</code>, <code>blacklisted_by</code>, <code>active BOOLEAN</code>, <code>expires_at DATE</code>.</div>
+      <div class="concept">Checked by BEFORE INSERT trigger on applications</div>
+    </div>
+  </div>
+
+</div>
+
+<div class="section">
+  <div class="section-title">New triggers</div>
+
+  <div class="row">
+    <div class="badge b-trig">TRIGGER</div>
+    <div class="info">
+      <div class="name">trg_block_blacklisted_student</div>
+      <div class="desc">BEFORE INSERT on <code>applications</code> — checks <code>blacklist</code> table. If student is active-blacklisted, SIGNALs an error and blocks the insert.</div>
+      <div class="concept">BEFORE INSERT · SIGNAL SQLSTATE · subquery in trigger</div>
+    </div>
+  </div>
+
+  <div class="row">
+    <div class="badge b-trig">TRIGGER</div>
+    <div class="info">
+      <div class="name">trg_auto_reject_on_fail</div>
+      <div class="desc">AFTER INSERT on <code>round_results</code> — if result is 'fail', automatically sets the application status to 'rejected' and inserts a notification.</div>
+      <div class="concept">AFTER INSERT · cascading UPDATE · cross-table logic</div>
+    </div>
+  </div>
+
+  <div class="row">
+    <div class="badge b-trig">TRIGGER</div>
+    <div class="info">
+      <div class="name">trg_update_placement_stats</div>
+      <div class="desc">AFTER UPDATE on <code>applications</code> — when status changes to 'selected', refreshes the <code>placement_stats</code> row for that student's branch and year.</div>
+      <div class="concept">AFTER UPDATE · conditional logic · aggregate refresh</div>
+    </div>
+  </div>
+
+  <div class="row">
+    <div class="badge b-trig">TRIGGER</div>
+    <div class="info">
+      <div class="name">trg_log_offer_changes</div>
+      <div class="desc">AFTER UPDATE on <code>offers</code> — logs old vs new values (stipend, deadline, status) into <code>audit_log</code> as JSON. Full change history for every offer.</div>
+      <div class="concept">AFTER UPDATE · JSON_OBJECT() · audit trail</div>
+    </div>
+  </div>
+
+</div>
+
+<div class="section">
+  <div class="section-title">Stored functions (return a single value, usable in SELECT)</div>
+
+  <div class="row">
+    <div class="badge b-func">FUNCTION</div>
+    <div class="info">
+      <div class="name">fn_student_eligibility(student_id, offer_id)</div>
+      <div class="desc">Returns 'eligible', 'low_cgpa', 'too_many_backlogs', or 'wrong_branch'. Use it in WHERE clauses or SELECT to explain why a student can't apply.</div>
+      <div class="concept">RETURNS VARCHAR · IF/ELSEIF · reusable in queries</div>
+    </div>
+  </div>
+
+  <div class="row">
+    <div class="badge b-func">FUNCTION</div>
+    <div class="info">
+      <div class="name">fn_days_to_deadline(offer_id)</div>
+      <div class="desc">Returns integer days remaining until offer deadline. Negative means expired. Use in SELECT to show countdown: <code>SELECT title, fn_days_to_deadline(id) AS days_left FROM offers</code>.</div>
+      <div class="concept">RETURNS INT · DATEDIFF() · CURDATE()</div>
+    </div>
+  </div>
+
+  <div class="row">
+    <div class="badge b-func">FUNCTION</div>
+    <div class="info">
+      <div class="name">fn_placement_rate(branch_code)</div>
+      <div class="desc">Returns the placement rate as a percentage for a given branch — (selected students / total students) × 100. Used in the stats dashboard.</div>
+      <div class="concept">RETURNS DECIMAL · COUNT with condition · percentage calc</div>
+    </div>
+  </div>
+
+</div>
+
+<div class="section">
+  <div class="section-title">Stored procedures (complex multi-step logic)</div>
+
+  <div class="row">
+    <div class="badge b-proc">PROCEDURE</div>
+    <div class="info">
+      <div class="name">sp_advance_to_next_round(offer_id, round_number)</div>
+      <div class="desc">Takes all students who passed round N of an offer and auto-creates their <code>round_results</code> entry for round N+1 with status 'pending'. Admin calls this to advance a batch.</div>
+      <div class="concept">Cursor · LOOP · INSERT from SELECT</div>
+    </div>
+  </div>
+
+  <div class="row">
+    <div class="badge b-proc">PROCEDURE</div>
+    <div class="info">
+      <div class="name">sp_bulk_reject(offer_id)</div>
+      <div class="desc">Sets all 'pending' applications for an offer to 'rejected' and inserts a notification for each student in a single transaction. Useful when an offer is withdrawn.</div>
+      <div class="concept">Transaction · ROLLBACK on error · bulk UPDATE + INSERT</div>
+    </div>
+  </div>
+
+  <div class="row">
+    <div class="badge b-proc">PROCEDURE</div>
+    <div class="info">
+      <div class="name">sp_generate_report(branch_code, year)</div>
+      <div class="desc">Outputs a full placement report for a branch/year — total students, applied, shortlisted, selected, avg CGPA of placed students, top company by selections.</div>
+      <div class="concept">Multiple result sets · aggregation · GROUP BY · HAVING</div>
+    </div>
+  </div>
+
+</div>
+
+<div class="section">
+  <div class="section-title">New views</div>
+
+  <div class="row">
+    <div class="badge b-view">VIEW</div>
+    <div class="info">
+      <div class="name">vw_placement_leaderboard</div>
+      <div class="desc">Students ranked by CGPA within each branch using RANK() OVER (PARTITION BY branch). Shows name, branch, cgpa, branch_rank, overall_rank, placement status.</div>
+      <div class="concept">Window functions · RANK() · PARTITION BY</div>
+    </div>
+  </div>
+
+  <div class="row">
+    <div class="badge b-view">VIEW</div>
+    <div class="info">
+      <div class="name">vw_offer_pipeline</div>
+      <div class="desc">Per-offer summary with applicant counts at each stage — pending, shortlisted, in rounds, selected, rejected. Like a Kanban column count per offer.</div>
+      <div class="concept">CASE WHEN aggregation · COUNT with filter · LEFT JOIN</div>
+    </div>
+  </div>
+
+  <div class="row">
+    <div class="badge b-view">VIEW</div>
+    <div class="info">
+      <div class="name">vw_company_performance</div>
+      <div class="desc">Per-company stats — total offers, total applications received, conversion rate (selected/applied %), average stipend offered, highest stipend.</div>
+      <div class="concept">Multi-table join · ratio calculation · GROUP BY company</div>
+    </div>
+  </div>
+
+</div>
+
+</div>

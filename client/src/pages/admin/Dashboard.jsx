@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   Container, Grid, Card, CardContent, Typography, Box, Paper, Button,
-  Skeleton, Divider,
+  Skeleton, Divider, Alert,
 } from '@mui/material';
 import {
   Business as BusinessIcon, Work as WorkIcon, People as PeopleIcon,
@@ -15,6 +15,8 @@ export default function AdminDashboard() {
   const navigate = useNavigate();
   const [stats, setStats] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [seeding, setSeeding] = useState(false);
+  const [seedMessage, setSeedMessage] = useState({ type: '', text: '' });
 
   useEffect(() => {
     loadStats();
@@ -37,6 +39,23 @@ export default function AdminDashboard() {
       console.error('Failed to load stats:', err);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleSeedDummyData = async () => {
+    setSeeding(true);
+    setSeedMessage({ type: '', text: '' });
+    try {
+      const data = await adminService.seedDummyData();
+      setSeedMessage({ type: 'success', text: data.message || 'Dummy data seeded successfully.' });
+      await loadStats();
+    } catch (err) {
+      setSeedMessage({
+        type: 'error',
+        text: err.response?.data?.error || 'Failed to seed dummy data.',
+      });
+    } finally {
+      setSeeding(false);
     }
   };
 
@@ -80,6 +99,24 @@ export default function AdminDashboard() {
         <Typography variant="body2" color="text.secondary" mt={0.5}>
           Placement portal overview and quick actions
         </Typography>
+        <Box mt={2} display="flex" gap={1.5} alignItems="center" flexWrap="wrap">
+          <Button
+            variant="contained"
+            onClick={handleSeedDummyData}
+            disabled={seeding}
+          >
+            {seeding ? 'Seeding Dummy Data...' : 'Fill Dummy Data (Expanded DB)'}
+          </Button>
+        </Box>
+        {seedMessage.text && (
+          <Alert
+            severity={seedMessage.type}
+            sx={{ mt: 2 }}
+            onClose={() => setSeedMessage({ type: '', text: '' })}
+          >
+            {seedMessage.text}
+          </Alert>
+        )}
       </Box>
 
       <Grid container spacing={3}>
