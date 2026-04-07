@@ -15,7 +15,9 @@ import AdminDashboard from './pages/admin/Dashboard';
 import AdminCompanies from './pages/admin/Companies';
 import AdminOffers from './pages/admin/Offers';
 import AdminStudents from './pages/admin/Students';
-import ExpansionHub from './pages/admin/ExpansionHub';
+import CatalogManagement from './pages/admin/CatalogManagement';
+import RecruitmentPipeline from './pages/admin/RecruitmentPipeline';
+import AnalyticsDashboard from './pages/admin/AnalyticsDashboard';
 
 function App() {
   return (
@@ -55,7 +57,9 @@ function App() {
             <Route path="companies" element={<AdminCompanies />} />
             <Route path="offers" element={<AdminOffers />} />
             <Route path="students" element={<AdminStudents />} />
-            <Route path="expansion" element={<ExpansionHub />} />
+            <Route path="catalog" element={<CatalogManagement />} />
+            <Route path="recruitment" element={<RecruitmentPipeline />} />
+            <Route path="analytics" element={<AnalyticsDashboard />} />
           </Route>
 
           <Route path="/" element={<Navigate to="/login" replace />} />

@@ -3,14 +3,16 @@ import { Outlet, useNavigate, useLocation } from 'react-router-dom';
 import {
   Box, Drawer, AppBar, Toolbar, Typography, List, ListItem,
   ListItemButton, ListItemIcon, ListItemText, IconButton,
-  Avatar, Menu, MenuItem, Divider, Badge, Tooltip,
+  Avatar, Menu, MenuItem, Divider, Tooltip,
 } from '@mui/material';
 import {
   Dashboard as DashboardIcon,
   Business as BusinessIcon,
   Work as WorkIcon,
   People as PeopleIcon,
-  Hub as HubIcon,
+  Category as CategoryIcon,
+  Timeline as TimelineIcon,
+  Assessment as AssessmentIcon,
   Menu as MenuIcon,
   Logout as LogoutIcon,
   AdminPanelSettings as AdminIcon,
@@ -24,7 +26,9 @@ const navItems = [
   { label: 'Companies', path: '/admin/companies', icon: <BusinessIcon /> },
   { label: 'Offers', path: '/admin/offers', icon: <WorkIcon /> },
   { label: 'Students', path: '/admin/students', icon: <PeopleIcon /> },
-  { label: 'Expansion Hub', path: '/admin/expansion', icon: <HubIcon /> },
+  { label: 'Catalog', path: '/admin/catalog', icon: <CategoryIcon /> },
+  { label: 'Recruitment', path: '/admin/recruitment', icon: <TimelineIcon /> },
+  { label: 'Analytics', path: '/admin/analytics', icon: <AssessmentIcon /> },
 ];
 
 export default function AdminLayout() {

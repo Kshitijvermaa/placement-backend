@@ -1,13 +1,16 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
-  Container, Grid, Card, CardContent, Typography, Box, Paper, Button,
-  Skeleton, Divider, Alert,
+  Container, Grid, Card, CardContent, Typography, Box, Paper,
+  Skeleton, Avatar,
 } from '@mui/material';
 import {
-  Business as BusinessIcon, Work as WorkIcon, People as PeopleIcon,
-  Assignment as AssignmentIcon, ArrowForward as ArrowIcon,
-  TrendingUp as TrendingIcon,
+  Business as BusinessIcon,
+  Work as WorkIcon,
+  People as PeopleIcon,
+  CheckCircle as CheckIcon,
+  Schedule as ScheduleIcon,
+  EmojiEvents as TrophyIcon,
 } from '@mui/icons-material';
 import { companyService, adminService, offerService } from '../../services';
 
@@ -15,8 +18,6 @@ export default function AdminDashboard() {
   const navigate = useNavigate();
   const [stats, setStats] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [seeding, setSeeding] = useState(false);
-  const [seedMessage, setSeedMessage] = useState({ type: '', text: '' });
 
   useEffect(() => {
     loadStats();
@@ -29,11 +30,17 @@ export default function AdminDashboard() {
         adminService.getStudents(),
         offerService.getAll(),
       ]);
+
+      const openOffers = offers.filter(o => o.status === 'open');
+      const closedOffers = offers.filter(o => o.status === 'closed');
+
       setStats({
         totalCompanies: companies.length,
-        activeOffers: offers.filter(o => o.status === 'open').length,
+        activeOffers: openOffers.length,
         totalStudents: students.length,
         totalOffers: offers.length,
+        closedOffers: closedOffers.length,
+        recentCompanies: companies.slice(-3).reverse(),
       });
     } catch (err) {
       console.error('Failed to load stats:', err);
@@ -42,149 +49,278 @@ export default function AdminDashboard() {
     }
   };
 
-  const handleSeedDummyData = async () => {
-    setSeeding(true);
-    setSeedMessage({ type: '', text: '' });
-    try {
-      const data = await adminService.seedDummyData();
-      setSeedMessage({ type: 'success', text: data.message || 'Dummy data seeded successfully.' });
-      await loadStats();
-    } catch (err) {
-      setSeedMessage({
-        type: 'error',
-        text: err.response?.data?.error || 'Failed to seed dummy data.',
-      });
-    } finally {
-      setSeeding(false);
-    }
-  };
-
   const statCards = stats ? [
     {
-      title: 'Total Companies', value: stats.totalCompanies,
-      icon: <BusinessIcon sx={{ fontSize: 32 }} />,
-      color: '#0f4c81', bg: 'rgba(15,76,129,0.08)',
+      title: 'Total Companies',
+      value: stats.totalCompanies,
+      description: 'View and manage all registered companies',
+      icon: <BusinessIcon sx={{ fontSize: 36 }} />,
+      gradient: 'linear-gradient(135deg, #667eea, #764ba2)',
       action: () => navigate('/admin/companies'),
     },
     {
-      title: 'Active Offers', value: stats.activeOffers,
-      icon: <WorkIcon sx={{ fontSize: 32 }} />,
-      color: '#2d8c5e', bg: 'rgba(45,140,94,0.08)',
+      title: 'Active Offers',
+      value: stats.activeOffers,
+      description: 'Browse currently open job offers',
+      icon: <WorkIcon sx={{ fontSize: 36 }} />,
+      gradient: 'linear-gradient(135deg, #f093fb, #f5576c)',
       action: () => navigate('/admin/offers'),
     },
     {
-      title: 'Registered Students', value: stats.totalStudents,
-      icon: <PeopleIcon sx={{ fontSize: 32 }} />,
-      color: '#e8621a', bg: 'rgba(232,98,26,0.08)',
+      title: 'Students',
+      value: stats.totalStudents,
+      description: 'Manage registered students',
+      icon: <PeopleIcon sx={{ fontSize: 36 }} />,
+      gradient: 'linear-gradient(135deg, #4facfe, #00f2fe)',
       action: () => navigate('/admin/students'),
     },
     {
-      title: 'Total Offers', value: stats.totalOffers,
-      icon: <AssignmentIcon sx={{ fontSize: 32 }} />,
-      color: '#7b1fa2', bg: 'rgba(123,31,162,0.08)',
+      title: 'Placements',
+      value: stats.closedOffers,
+      description: 'View completed placements',
+      icon: <TrophyIcon sx={{ fontSize: 36 }} />,
+      gradient: 'linear-gradient(135deg, #43e97b, #38f9d7)',
       action: () => navigate('/admin/offers'),
     },
   ] : [];
 
-  const quickActions = [
-    { label: 'Add Company', desc: 'Register a new recruiting company', path: '/admin/companies', color: '#0f4c81' },
-    { label: 'Post Offer', desc: 'Create a new internship opportunity', path: '/admin/offers', color: '#2d8c5e' },
-    { label: 'View Students', desc: 'Browse registered student profiles', path: '/admin/students', color: '#e8621a' },
-  ];
-
   return (
-    <Container maxWidth="lg">
-      <Box mb={3}>
-        <Typography variant="h4">Admin Dashboard</Typography>
-        <Typography variant="body2" color="text.secondary" mt={0.5}>
-          Placement portal overview and quick actions
+    <Container maxWidth="xl">
+      {/* Welcome Section */}
+      <Paper
+        sx={{
+          p: 3,
+          mb: 4,
+          borderRadius: 4,
+          background: 'linear-gradient(135deg, #1e293b, #0f172a)',
+          color: 'white',
+        }}
+      >
+        <Typography variant="h5" sx={{ fontWeight: 700 }}>
+          Welcome, Admin 👋
         </Typography>
-        <Box mt={2} display="flex" gap={1.5} alignItems="center" flexWrap="wrap">
-          <Button
-            variant="contained"
-            onClick={handleSeedDummyData}
-            disabled={seeding}
-          >
-            {seeding ? 'Seeding Dummy Data...' : 'Fill Dummy Data (Expanded DB)'}
-          </Button>
-        </Box>
-        {seedMessage.text && (
-          <Alert
-            severity={seedMessage.type}
-            sx={{ mt: 2 }}
-            onClose={() => setSeedMessage({ type: '', text: '' })}
-          >
-            {seedMessage.text}
-          </Alert>
-        )}
-      </Box>
+        <Typography variant="body2" sx={{ opacity: 0.8 }}>
+          Here's what's happening in your placement system today.
+        </Typography>
+      </Paper>
 
-      <Grid container spacing={3}>
+      {/* Stats Cards */}
+      <Grid container spacing={3} sx={{ mb: 4 }}>
         {loading
           ? [1, 2, 3, 4].map(i => (
-              <Grid item xs={12} sm={6} md={3} key={i}>
-                <Skeleton variant="rounded" height={110} />
+              <Grid item xs={12} sm={6} lg={3} key={i} sx={{ display: 'flex' }}>
+                <Skeleton variant="rounded" height={170} sx={{ borderRadius: 3 }} />
               </Grid>
             ))
           : statCards.map((stat, i) => (
-              <Grid item xs={12} sm={6} md={3} key={i}>
+              <Grid item xs={12} sm={6} lg={3} key={i} sx={{ display: 'flex' }}>
                 <Card
                   onClick={stat.action}
-                  sx={{ cursor: 'pointer', position: 'relative', overflow: 'hidden' }}
+                  sx={{
+                    cursor: 'pointer',
+                    borderRadius: 4,
+                    background: stat.gradient,
+                    color: 'white',
+                    height: 180,
+                    display: 'flex',
+                    position: 'relative',
+                    overflow: 'hidden',
+                    transition: 'all 0.35s ease',
+                    boxShadow: '0 6px 24px rgba(0,0,0,0.12)',
+
+                    '&::before': {
+                      content: '""',
+                      position: 'absolute',
+                      inset: 0,
+                      background: 'rgba(255,255,255,0.08)',
+                      backdropFilter: 'blur(6px)',
+                    },
+
+                    '&:hover': {
+                      transform: 'translateY(-10px) scale(1.02)',
+                      boxShadow: '0 18px 40px rgba(0,0,0,0.2)',
+                    },
+                  }}
                 >
-                  <CardContent sx={{ p: 2.5 }}>
+                  <CardContent
+                    sx={{
+                      position: 'relative',
+                      zIndex: 1,
+                      height: '100%',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      justifyContent: 'space-between',
+                    }}
+                  >
+                    {/* Top Row */}
                     <Box display="flex" justifyContent="space-between" alignItems="flex-start">
-                      <Box>
-                        <Typography variant="caption" color="text.secondary" fontWeight={600} letterSpacing={0.5}>
-                          {stat.title.toUpperCase()}
-                        </Typography>
-                        <Typography variant="h3" fontWeight={800} mt={0.5} sx={{ color: stat.color }}>
-                          {stat.value}
-                        </Typography>
-                      </Box>
-                      <Box sx={{
-                        bgcolor: stat.bg, color: stat.color,
-                        borderRadius: 2, p: 1.2, display: 'flex',
-                      }}>
+                      <Box
+                        sx={{
+                          bgcolor: 'rgba(255,255,255,0.2)',
+                          borderRadius: 2,
+                          p: 1,
+                          flexShrink: 0,
+                        }}
+                      >
                         {stat.icon}
                       </Box>
+
+                      <Typography
+                        variant="caption"
+                        sx={{
+                          opacity: 0.9,
+                          whiteSpace: 'nowrap',
+                          flexShrink: 0,
+                        }}
+                      >
+                        View →
+                      </Typography>
+                    </Box>
+
+                    {/* Bottom Content */}
+                    <Box sx={{ mt: 1 }}>
+                      <Typography
+                        variant="h4"
+                        sx={{
+                          fontWeight: 800,
+                          lineHeight: 1.1,
+                        }}
+                      >
+                        {stat.value}
+                      </Typography>
+
+                      <Typography
+                        variant="body1"
+                        sx={{
+                          fontWeight: 600,
+                          lineHeight: 1.2,
+                          overflow: 'hidden',
+                          textOverflow: 'ellipsis',
+                          whiteSpace: 'nowrap',
+                        }}
+                      >
+                        {stat.title}
+                      </Typography>
+
+                      <Typography
+                        variant="caption"
+                        sx={{
+                          opacity: 0.85,
+                          display: '-webkit-box',
+                          WebkitLineClamp: 2,
+                          WebkitBoxOrient: 'vertical',
+                          overflow: 'hidden',
+                        }}
+                      >
+                        {stat.description}
+                      </Typography>
                     </Box>
                   </CardContent>
                 </Card>
               </Grid>
             ))
         }
+      </Grid>
 
-        {/* Quick Actions */}
+      {/* Recent Companies */}
+      <Grid container spacing={3}>
         <Grid item xs={12}>
-          <Paper sx={{ p: 3 }}>
-            <Box display="flex" alignItems="center" gap={1} mb={2}>
-              <TrendingIcon color="primary" />
-              <Typography variant="h6">Quick Actions</Typography>
+          <Paper
+            elevation={0}
+            sx={{
+              p: 3,
+              borderRadius: 3,
+              border: '1px solid rgba(0,0,0,0.08)',
+            }}
+          >
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mb: 3 }}>
+              <Box
+                sx={{
+                  background: 'linear-gradient(135deg, #667eea, #764ba2)',
+                  borderRadius: 2,
+                  p: 1,
+                }}
+              >
+                <ScheduleIcon sx={{ color: 'white' }} />
+              </Box>
+              <Box>
+                <Typography variant="h6" sx={{ fontWeight: 700 }}>
+                  Recent Companies
+                </Typography>
+                <Typography variant="caption" color="text.secondary">
+                  Latest registered companies
+                </Typography>
+              </Box>
             </Box>
-            <Divider sx={{ mb: 2 }} />
-            <Grid container spacing={2}>
-              {quickActions.map((action, i) => (
-                <Grid item xs={12} sm={4} key={i}>
-                  <Box
-                    onClick={() => navigate(action.path)}
-                    sx={{
-                      p: 2, borderRadius: 2, border: '1px solid rgba(0,0,0,0.08)',
-                      cursor: 'pointer', display: 'flex', justifyContent: 'space-between',
-                      alignItems: 'center',
-                      '&:hover': { bgcolor: 'rgba(0,0,0,0.02)', borderColor: action.color },
-                      transition: 'all 0.2s',
-                    }}
-                  >
-                    <Box>
-                      <Typography fontWeight={700} sx={{ color: action.color }}>{action.label}</Typography>
-                      <Typography variant="caption" color="text.secondary">{action.desc}</Typography>
+
+            {loading ? (
+              <Grid container spacing={2}>
+                {[1, 2, 3].map(i => (
+                  <Grid item xs={12} sm={6} lg={3} key={i} sx={{ display: 'flex' }}>
+                    <Skeleton height={100} sx={{ borderRadius: 2 }} />
+                  </Grid>
+                ))}
+              </Grid>
+            ) : stats?.recentCompanies?.length > 0 ? (
+              <Grid container spacing={2}>
+                {stats.recentCompanies.map((company, i) => (
+                  <Grid item xs={12} sm={6} lg={3} key={i} sx={{ display: 'flex' }}>
+                    <Box
+                      onClick={() => navigate('/admin/companies')}
+                      sx={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: 2,
+                        p: 2.5,
+                        borderRadius: 2,
+                        border: '1px solid rgba(0,0,0,0.08)',
+                        cursor: 'pointer',
+                        transition: 'all 0.25s ease',
+                        height: 100,
+
+                        '&:hover': {
+                          bgcolor: 'rgba(102,126,234,0.08)',
+                          borderColor: '#667eea',
+                          transform: 'translateY(-6px) scale(1.02)',
+                          boxShadow: '0 6px 16px rgba(102,126,234,0.2)',
+                        },
+                      }}
+                    >
+                      <Avatar
+                        sx={{
+                          bgcolor: '#667eea',
+                          width: 50,
+                          height: 50,
+                          fontWeight: 700,
+                        }}
+                      >
+                        {company.name.charAt(0)}
+                      </Avatar>
+
+                      <Box sx={{ flex: 1 }}>
+                        <Typography variant="body1" sx={{ fontWeight: 600 }}>
+                          {company.name}
+                        </Typography>
+                        <Typography variant="caption" color="text.secondary">
+                          {company.sector || 'Technology'} • {company.location || 'India'}
+                        </Typography>
+                      </Box>
+
+                      <CheckIcon sx={{ color: '#43e97b' }} />
                     </Box>
-                    <ArrowIcon sx={{ color: action.color, fontSize: 20 }} />
-                  </Box>
-                </Grid>
-              ))}
-            </Grid>
+                  </Grid>
+                ))}
+              </Grid>
+            ) : (
+              <Box textAlign="center" py={5}>
+                <Typography variant="h6" sx={{ mb: 1 }}>
+                  No companies yet
+                </Typography>
+                <Typography variant="body2" color="text.secondary">
+                  Start by adding a company to begin placements 🚀
+                </Typography>
+              </Box>
+            )}
           </Paper>
         </Grid>
       </Grid>
