@@ -10,7 +10,7 @@ import {
   School as SchoolIcon, Search as SearchIcon,
   CheckCircle as AppliedIcon, Business as BizIcon,
 } from '@mui/icons-material';
-import { offerService, applicationService } from '../../services';
+import { studentService, applicationService } from '../../services';
 
 const TYPE_LABELS = { summer: 'Summer', '6_month': '6 Month', '6_plus_6_month': '6+6 Month' };
 const TYPE_COLORS = { summer: 'primary', '6_month': 'secondary', '6_plus_6_month': 'success' };
@@ -31,13 +31,14 @@ export default function OffersList() {
   const loadData = async () => {
     try {
       const [offersData, myApps] = await Promise.all([
-        offerService.getAll(),
+        studentService.getEligibleOffers(),
         applicationService.getMyApplications().catch(() => []),
       ]);
       setOffers(offersData);
       setAppliedOfferIds(new Set(myApps.map(a => a.offer_id)));
     } catch (err) {
-      setMessage({ type: 'error', text: 'Failed to load offers' });
+      const errorMsg = err.response?.data?.error || 'Failed to load offers';
+      setMessage({ type: 'error', text: errorMsg });
     } finally {
       setLoading(false);
     }
@@ -86,9 +87,9 @@ export default function OffersList() {
   return (
     <Container maxWidth="lg">
       <Box mb={3}>
-        <Typography variant="h4">Browse Offers</Typography>
+        <Typography variant="h4">Eligible Offers for You</Typography>
         <Typography variant="body2" color="text.secondary" mt={0.5}>
-          {offers.length} internship opportunities available
+          {offers.length} internship{offers.length !== 1 ? 's' : ''} match your eligibility criteria (CGPA, backlogs, branch)
         </Typography>
       </Box>
 

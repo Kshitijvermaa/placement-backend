@@ -48,6 +48,11 @@ export const studentService = {
     });
     return response.data;
   },
+
+  getEligibleOffers: async () => {
+    const response = await api.get('/students/eligible-offers');
+    return response.data;
+  },
 };
 
 export const offerService = {

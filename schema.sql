@@ -220,6 +220,7 @@ CREATE TABLE interviews (
   mode           ENUM('online', 'offline') NOT NULL DEFAULT 'online',
   link_or_venue  VARCHAR(300),
   notes          TEXT,
+  status         ENUM('scheduled', 'completed', 'cancelled') NOT NULL DEFAULT 'scheduled',
   created_at     TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   FOREIGN KEY (application_id) REFERENCES applications(id) ON DELETE CASCADE
 );
@@ -229,6 +230,7 @@ CREATE TABLE notifications (
   id         INT AUTO_INCREMENT PRIMARY KEY,
   user_id    INT NOT NULL,
   message    TEXT NOT NULL,
+  type       VARCHAR(50) NOT NULL DEFAULT 'general',
   is_read    BOOLEAN NOT NULL DEFAULT FALSE,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
@@ -447,6 +449,48 @@ BEGIN
         'status', NEW.status
       )
     );
+  END IF;
+END //
+
+CREATE TRIGGER trg_notify_status_change
+AFTER UPDATE ON applications
+FOR EACH ROW
+BEGIN
+  IF OLD.status <> NEW.status THEN
+    INSERT INTO notifications (user_id, message, type)
+    SELECT s.user_id,
+      CONCAT('Your application for "', o.title, '" has been updated to: ', NEW.status),
+      'placement'
+    FROM students s
+    JOIN offers o ON o.id = NEW.offer_id
+    WHERE s.id = NEW.student_id;
+  END IF;
+END //
+
+CREATE TRIGGER trg_block_closed_offer_apply
+BEFORE INSERT ON applications
+FOR EACH ROW
+BEGIN
+  DECLARE offer_status VARCHAR(20);
+  SELECT status INTO offer_status FROM offers WHERE id = NEW.offer_id;
+  IF offer_status <> 'open' THEN
+    SIGNAL SQLSTATE '45000'
+      SET MESSAGE_TEXT = 'Cannot apply to a closed or filled offer';
+  END IF;
+END //
+
+CREATE TRIGGER trg_single_interview_per_application
+BEFORE INSERT ON interviews
+FOR EACH ROW
+BEGIN
+  IF EXISTS (
+    SELECT 1
+    FROM interviews
+    WHERE application_id = NEW.application_id
+      AND status != 'cancelled'
+  ) THEN
+    SIGNAL SQLSTATE '45000'
+      SET MESSAGE_TEXT = 'An active interview is already scheduled for this application';
   END IF;
 END //
 
@@ -689,11 +733,6 @@ LEFT JOIN offers o ON o.company_id = c.id
 LEFT JOIN applications a ON a.offer_id = o.id
 GROUP BY c.id, c.name;
 
--- =====================================================
--- ORIGINAL SQL OBJECTS (Pre-Expansion)
--- =====================================================
-
--- VIEW: Student Eligible Offers (shows which offers each student can apply to)
 CREATE VIEW vw_student_eligible_offers AS
 SELECT 
   s.id AS student_id,
@@ -702,97 +741,23 @@ SELECT
   s.cgpa,
   s.backlogs,
   o.id AS offer_id,
-  o.title,
+  o.title AS offer_title,
   c.name AS company_name,
   o.stipend,
   o.deadline,
-  o.type,
-  CASE WHEN a.id IS NOT NULL THEN TRUE ELSE FALSE END AS already_applied
+  o.type AS offer_type,
+  CASE WHEN a.id IS NOT NULL THEN TRUE ELSE FALSE END AS already_applied,
+  a.status AS application_status
 FROM students s
 JOIN users u ON s.user_id = u.id
 CROSS JOIN offers o
 JOIN companies c ON o.company_id = c.id
+JOIN offer_branches ob ON ob.offer_id = o.id
+JOIN branches b ON b.id = ob.branch_id
 LEFT JOIN applications a ON a.student_id = s.id AND a.offer_id = o.id
 WHERE o.status = 'open' 
   AND o.deadline >= CURDATE()
   AND s.cgpa >= o.min_cgpa
   AND s.backlogs <= o.max_backlogs
-  AND (o.eligible_branches IS NULL OR FIND_IN_SET(s.branch, o.eligible_branches) > 0);
+  AND (b.code = s.branch OR b.code = 'ALL');
 
--- TRIGGER: Notify student when application status changes
-DELIMITER $$
-CREATE TRIGGER trg_notify_status_change
-AFTER UPDATE ON applications
-FOR EACH ROW
-BEGIN
-  IF OLD.status <> NEW.status THEN
-    INSERT INTO notifications (user_id, message, type)
-    SELECT s.user_id,
-      CONCAT('Your application for "', o.title, '" has been updated to: ', NEW.status),
-      'placement'
-    FROM students s
-    JOIN offers o ON o.id = NEW.offer_id
-    WHERE s.id = NEW.student_id;
-  END IF;
-END$$
-DELIMITER ;
-
--- TRIGGER: Prevent applying to closed/filled offers
-DELIMITER $$
-CREATE TRIGGER trg_block_closed_offer_apply
-BEFORE INSERT ON applications
-FOR EACH ROW
-BEGIN
-  DECLARE offer_status VARCHAR(20);
-  SELECT status INTO offer_status FROM offers WHERE id = NEW.offer_id;
-  IF offer_status <> 'open' THEN
-    SIGNAL SQLSTATE '45000'
-      SET MESSAGE_TEXT = 'Cannot apply to a closed or filled offer';
-  END IF;
-END$$
-DELIMITER ;
-
--- TRIGGER: Prevent duplicate interview scheduling
-DELIMITER $$
-CREATE TRIGGER trg_single_interview_per_application
-BEFORE INSERT ON interviews
-FOR EACH ROW
-BEGIN
-  IF EXISTS (SELECT 1 FROM interviews WHERE application_id = NEW.application_id AND status != 'cancelled') THEN
-    SIGNAL SQLSTATE '45000'
-      SET MESSAGE_TEXT = 'An active interview is already scheduled for this application';
-  END IF;
-END$$
-DELIMITER ;
-
--- STORED PROCEDURE: Get offer applicant summary stats
-DELIMITER $$
-CREATE PROCEDURE GetOfferStats(IN p_offer_id INT)
-BEGIN
-  SELECT 
-    o.title,
-    c.name AS company,
-    COUNT(a.id) AS total_applicants,
-    SUM(CASE WHEN a.status = 'pending' THEN 1 ELSE 0 END) AS pending,
-    SUM(CASE WHEN a.status = 'shortlisted' THEN 1 ELSE 0 END) AS shortlisted,
-    SUM(CASE WHEN a.status = 'selected' THEN 1 ELSE 0 END) AS selected,
-    SUM(CASE WHEN a.status = 'rejected' THEN 1 ELSE 0 END) AS rejected,
-    AVG(s.cgpa) AS avg_applicant_cgpa,
-    MIN(s.cgpa) AS min_cgpa,
-    MAX(s.cgpa) AS max_cgpa
-  FROM offers o
-  JOIN companies c ON o.company_id = c.id
-  LEFT JOIN applications a ON o.id = a.offer_id
-  LEFT JOIN students s ON a.student_id = s.id
-  WHERE o.id = p_offer_id
-  GROUP BY o.id, o.title, c.name;
-END$$
-DELIMITER ;
-
--- EVENT: Auto-close expired offers (runs daily at midnight)
-CREATE EVENT IF NOT EXISTS evt_close_expired_offers
-ON SCHEDULE EVERY 1 DAY
-STARTS CURRENT_TIMESTAMP
-DO
-  UPDATE offers SET status = 'closed'
-  WHERE deadline < CURDATE() AND status = 'open';

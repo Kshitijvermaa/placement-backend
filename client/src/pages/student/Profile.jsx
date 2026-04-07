@@ -38,11 +38,31 @@ const Profile = () => {
   const loadProfile = async () => {
     try {
       const data = await studentService.getProfile();
-      setProfile(data);
+      console.log('Loaded profile:', data); // Debug log
+      setProfile({
+        name: data.name || '',
+        email: data.email || '',
+        reg_number: data.reg_number || '',
+        branch: data.branch || '',
+        cgpa: data.cgpa || '',
+        backlogs: data.backlogs || 0,
+        phone: data.phone || '',
+      });
       setHasProfile(true);
     } catch (error) {
+      console.error('Profile load error:', error);
       if (error.response?.status === 404) {
         setHasProfile(false);
+        // If profile doesn't exist, at least load name and email from token/user
+        setMessage({ 
+          type: 'info', 
+          text: 'Please complete your profile to access placement opportunities' 
+        });
+      } else {
+        setMessage({ 
+          type: 'error', 
+          text: 'Failed to load profile. Please try again.' 
+        });
       }
     }
   };

@@ -114,4 +114,55 @@ router.get('/resume', auth, (req, res) => {
   });
 });
 
+// Get eligible offers for logged-in student
+router.get('/eligible-offers', auth, (req, res) => {
+  const user_id = req.user.id;
+
+  // First get the student_id from user_id
+  db.query('SELECT id FROM students WHERE user_id = ?', [user_id], (err, studentResults) => {
+    if (err) return res.status(500).json({ error: err.message });
+    if (studentResults.length === 0) {
+      return res.status(404).json({ error: 'Student profile not found. Please complete your profile first.' });
+    }
+
+    const student_id = studentResults[0].id;
+
+    // Use the view to get eligible offers
+    db.query(
+      `SELECT 
+        offer_id, 
+        offer_title, 
+        company_name, 
+        stipend, 
+        deadline, 
+        offer_type,
+        already_applied,
+        application_status
+      FROM vw_student_eligible_offers 
+      WHERE student_id = ?
+      ORDER BY deadline ASC`,
+      [student_id],
+      (err, offers) => {
+        if (err) {
+          console.error('Error fetching eligible offers:', err);
+          return res.status(500).json({ error: err.message });
+        }
+        
+        // Transform to match the format expected by frontend
+        const transformedOffers = offers.map(offer => ({
+          id: offer.offer_id,
+          title: offer.offer_title,
+          company_name: offer.company_name,
+          stipend: offer.stipend,
+          deadline: offer.deadline,
+          type: offer.offer_type,
+          status: 'open' // All offers in the view are open
+        }));
+        
+        res.json(transformedOffers);
+      }
+    );
+  });
+});
+
 module.exports = router;

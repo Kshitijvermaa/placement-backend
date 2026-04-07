@@ -39,15 +39,15 @@ import {
 import { adminService } from '../../services';
 
 const metricConfig = [
-  { key: 'departments', label: 'Departments', icon: <Apartment />, color: '#0f4c81' },
-  { key: 'batches', label: 'Batches', icon: <Layers />, color: '#1565c0' },
-  { key: 'recruiters', label: 'Recruiters', icon: <Badge />, color: '#2d8c5e' },
-  { key: 'statuses', label: 'Placement Statuses', icon: <FactCheck />, color: '#7b1fa2' },
-  { key: 'rounds', label: 'Rounds', icon: <Timeline />, color: '#ef6c00' },
-  { key: 'results', label: 'Round Results', icon: <Assessment />, color: '#00838f' },
-  { key: 'feedback', label: 'Feedback', icon: <Insights />, color: '#5d4037' },
-  { key: 'documents', label: 'Documents', icon: <Description />, color: '#455a64' },
-  { key: 'blacklist', label: 'Blacklist', icon: <Group />, color: '#c62828' },
+  { key: 'departments', label: 'Departments', icon: <Apartment />, color: '#1976d2', gradient: 'linear-gradient(135deg, #1976d2 0%, #42a5f5 100%)' },
+  { key: 'batches', label: 'Batches', icon: <Layers />, color: '#388e3c', gradient: 'linear-gradient(135deg, #388e3c 0%, #66bb6a 100%)' },
+  { key: 'recruiters', label: 'Recruiters', icon: <Badge />, color: '#f57c00', gradient: 'linear-gradient(135deg, #f57c00 0%, #ffb74d 100%)' },
+  { key: 'statuses', label: 'Placement Statuses', icon: <FactCheck />, color: '#7b1fa2', gradient: 'linear-gradient(135deg, #7b1fa2 0%, #ab47bc 100%)' },
+  { key: 'rounds', label: 'Rounds', icon: <Timeline />, color: '#0288d1', gradient: 'linear-gradient(135deg, #0288d1 0%, #4fc3f7 100%)' },
+  { key: 'results', label: 'Round Results', icon: <Assessment />, color: '#00796b', gradient: 'linear-gradient(135deg, #00796b 0%, #4db6ac 100%)' },
+  { key: 'feedback', label: 'Feedback', icon: <Insights />, color: '#5d4037', gradient: 'linear-gradient(135deg, #5d4037 0%, #8d6e63 100%)' },
+  { key: 'documents', label: 'Documents', icon: <Description />, color: '#455a64', gradient: 'linear-gradient(135deg, #455a64 0%, #78909c 100%)' },
+  { key: 'blacklist', label: 'Blacklist', icon: <Group />, color: '#c62828', gradient: 'linear-gradient(135deg, #c62828 0%, #ef5350 100%)' },
 ];
 
 export default function ExpansionHub() {
@@ -153,97 +153,253 @@ export default function ExpansionHub() {
   };
 
   return (
-    <Container maxWidth="xl">
-      <Box mb={3}>
-        <Typography variant="h4">Expansion Hub</Typography>
-        <Typography variant="body2" color="text.secondary">All new normalized tables, SQL features, and analytics in one place.</Typography>
+    <Container maxWidth="xl" sx={{ py: 3 }}>
+      <Box mb={4}>
+        <Typography variant="h4" fontWeight={700} sx={{ 
+          background: 'linear-gradient(135deg, #1976d2 0%, #7b1fa2 100%)', 
+          WebkitBackgroundClip: 'text', 
+          WebkitTextFillColor: 'transparent',
+          mb: 0.5
+        }}>
+          Expansion Hub
+        </Typography>
+        <Typography variant="body2" color="text.secondary">
+          Advanced features • Normalized tables • SQL analytics • Stored procedures
+        </Typography>
       </Box>
 
-      {message.text && <Alert severity={message.type} sx={{ mb: 2 }}>{message.text}</Alert>}
+      {message.text && <Alert severity={message.type} sx={{ mb: 3 }}>{message.text}</Alert>}
 
-      <Grid container spacing={2} sx={{ mb: 2 }}>
+      <Grid container spacing={2.5} sx={{ mb: 3 }}>
         {metricConfig.map((m) => (
           <Grid item xs={12} sm={6} md={4} lg={3} key={m.key}>
-            <Card sx={{ borderTop: `3px solid ${m.color}` }}>
-              <CardContent sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <Box>
-                  <Typography variant="caption" color="text.secondary">{m.label}</Typography>
-                  <Typography variant="h5" fontWeight={800}>{overview[m.key] ?? 0}</Typography>
+            <Card 
+              elevation={3}
+              sx={{ 
+                background: m.gradient,
+                color: 'white',
+                height: '100%',
+                transition: 'transform 0.2s, box-shadow 0.2s',
+                '&:hover': { 
+                  transform: 'translateY(-4px)', 
+                  boxShadow: 6 
+                }
+              }}
+            >
+              <CardContent sx={{ p: 2.5 }}>
+                <Box display="flex" justifyContent="space-between" alignItems="flex-start" mb={1.5}>
+                  <Box sx={{ opacity: 0.9 }}>{m.icon}</Box>
+                  <Typography variant="h4" fontWeight={800}>
+                    {overview[m.key] ?? 0}
+                  </Typography>
                 </Box>
-                <Box sx={{ color: m.color }}>{m.icon}</Box>
+                <Typography variant="body2" sx={{ opacity: 0.95, fontWeight: 500 }}>
+                  {m.label}
+                </Typography>
               </CardContent>
             </Card>
           </Grid>
         ))}
       </Grid>
 
-      <Paper sx={{ mb: 2 }}>
-        <Tabs value={tab} onChange={(_, v) => setTab(v)} variant="scrollable" scrollButtons>
-          <Tab label="Catalog" />
-          <Tab label="Recruitment Flow" />
-          <Tab label="Documents & Feedback" />
-          <Tab label="Analytics & SQL Features" />
+      <Paper sx={{ mb: 3, borderRadius: 2, overflow: 'hidden' }} elevation={2}>
+        <Tabs 
+          value={tab} 
+          onChange={(_, v) => setTab(v)} 
+          variant="scrollable" 
+          scrollButtons
+          sx={{
+            '& .MuiTab-root': { 
+              fontWeight: 600, 
+              textTransform: 'none', 
+              fontSize: '0.95rem',
+              minHeight: 56
+            }
+          }}
+        >
+          <Tab label="📚 Catalog & Setup" />
+          <Tab label="📊 Recruitment Flow" />
+          <Tab label="📄 Documents & Feedback" />
+          <Tab label="📈 Analytics & SQL Features" />
         </Tabs>
       </Paper>
 
       {loading ? <Typography>Loading...</Typography> : (
         <>
           {tab === 0 && (
-            <Grid container spacing={2}>
+            <Grid container spacing={3}>
               <Grid item xs={12} lg={4}>
-                <Paper sx={{ p: 2 }}>
-                  <Typography variant="h6">Add Department</Typography>
-                  <TextField label="Code" size="small" fullWidth sx={{ mt: 1 }} value={departmentForm.code} onChange={(e) => setDepartmentForm({ ...departmentForm, code: e.target.value })} />
-                  <TextField label="Name" size="small" fullWidth sx={{ mt: 1 }} value={departmentForm.name} onChange={(e) => setDepartmentForm({ ...departmentForm, name: e.target.value })} />
-                  <Button variant="contained" sx={{ mt: 1 }} onClick={() => submit(() => adminService.createDepartment(departmentForm), 'Department added')}>Create</Button>
+                <Paper elevation={2} sx={{ p: 3, borderRadius: 2, height: '100%' }}>
+                  <Typography variant="h6" fontWeight={600} mb={2} color="primary.main">
+                    🏢 Add Department
+                  </Typography>
+                  <Divider sx={{ mb: 2 }} />
+                  <TextField 
+                    label="Code" 
+                    size="small" 
+                    fullWidth 
+                    sx={{ mt: 1 }} 
+                    value={departmentForm.code} 
+                    onChange={(e) => setDepartmentForm({ ...departmentForm, code: e.target.value.toUpperCase() })} 
+                    placeholder="e.g., CSE, ECE"
+                  />
+                  <TextField 
+                    label="Name" 
+                    size="small" 
+                    fullWidth 
+                    sx={{ mt: 2 }} 
+                    value={departmentForm.name} 
+                    onChange={(e) => setDepartmentForm({ ...departmentForm, name: e.target.value })} 
+                    placeholder="e.g., Computer Science"
+                  />
+                  <Button 
+                    variant="contained" 
+                    fullWidth
+                    sx={{ mt: 2 }} 
+                    disabled={!departmentForm.code || !departmentForm.name}
+                    onClick={() => submit(() => adminService.createDepartment(departmentForm), 'Department added')}
+                  >
+                    Create Department
+                  </Button>
                 </Paper>
               </Grid>
               <Grid item xs={12} lg={4}>
-                <Paper sx={{ p: 2 }}>
-                  <Typography variant="h6">Add Academic Batch</Typography>
-                  <TextField label="Batch Label" size="small" fullWidth sx={{ mt: 1 }} value={batchForm.batch_label} onChange={(e) => setBatchForm({ ...batchForm, batch_label: e.target.value })} />
-                  <Grid container spacing={1} sx={{ mt: 0.5 }}>
-                    <Grid item xs={4}><TextField label="Start" size="small" type="number" fullWidth value={batchForm.start_year} onChange={(e) => setBatchForm({ ...batchForm, start_year: e.target.value })} /></Grid>
-                    <Grid item xs={4}><TextField label="End" size="small" type="number" fullWidth value={batchForm.end_year} onChange={(e) => setBatchForm({ ...batchForm, end_year: e.target.value })} /></Grid>
-                    <Grid item xs={4}><TextField label="Grad" size="small" type="number" fullWidth value={batchForm.graduation_year} onChange={(e) => setBatchForm({ ...batchForm, graduation_year: e.target.value })} /></Grid>
+                <Paper elevation={2} sx={{ p: 3, borderRadius: 2, height: '100%' }}>
+                  <Typography variant="h6" fontWeight={600} mb={2} color="success.main">
+                    📅 Add Academic Batch
+                  </Typography>
+                  <Divider sx={{ mb: 2 }} />
+                  <TextField 
+                    label="Batch Label" 
+                    size="small" 
+                    fullWidth 
+                    sx={{ mt: 1 }} 
+                    value={batchForm.batch_label} 
+                    onChange={(e) => setBatchForm({ ...batchForm, batch_label: e.target.value })} 
+                    placeholder="e.g., 2023-24"
+                  />
+                  <Grid container spacing={1} sx={{ mt: 1 }}>
+                    <Grid item xs={4}>
+                      <TextField 
+                        label="Start" 
+                        size="small" 
+                        type="number" 
+                        fullWidth 
+                        value={batchForm.start_year} 
+                        onChange={(e) => setBatchForm({ ...batchForm, start_year: e.target.value })} 
+                      />
+                    </Grid>
+                    <Grid item xs={4}>
+                      <TextField 
+                        label="End" 
+                        size="small" 
+                        type="number" 
+                        fullWidth 
+                        value={batchForm.end_year} 
+                        onChange={(e) => setBatchForm({ ...batchForm, end_year: e.target.value })} 
+                      />
+                    </Grid>
+                    <Grid item xs={4}>
+                      <TextField 
+                        label="Grad" 
+                        size="small" 
+                        type="number" 
+                        fullWidth 
+                        value={batchForm.graduation_year} 
+                        onChange={(e) => setBatchForm({ ...batchForm, graduation_year: e.target.value })} 
+                      />
+                    </Grid>
                   </Grid>
-                  <Button variant="contained" sx={{ mt: 1 }} onClick={() => submit(() => adminService.createBatch(batchForm), 'Batch added')}>Create</Button>
+                  <Button 
+                    variant="contained" 
+                    color="success"
+                    fullWidth
+                    sx={{ mt: 2 }} 
+                    disabled={!batchForm.batch_label}
+                    onClick={() => submit(() => adminService.createBatch(batchForm), 'Batch added')}
+                  >
+                    Create Batch
+                  </Button>
                 </Paper>
               </Grid>
               <Grid item xs={12} lg={4}>
-                <Paper sx={{ p: 2 }}>
-                  <Typography variant="h6">Add Recruiter</Typography>
+                <Paper elevation={2} sx={{ p: 3, borderRadius: 2, height: '100%' }}>
+                  <Typography variant="h6" fontWeight={600} mb={2} color="warning.main">
+                    👤 Add Recruiter
+                  </Typography>
+                  <Divider sx={{ mb: 2 }} />
                   <FormControl fullWidth size="small" sx={{ mt: 1 }}>
                     <InputLabel>Company</InputLabel>
                     <Select label="Company" value={recruiterForm.company_id} onChange={(e) => setRecruiterForm({ ...recruiterForm, company_id: e.target.value })}>
                       {meta.companies.map((c) => <MenuItem key={c.id} value={c.id}>{c.name}</MenuItem>)}
                     </Select>
                   </FormControl>
-                  <TextField label="Name" size="small" fullWidth sx={{ mt: 1 }} value={recruiterForm.name} onChange={(e) => setRecruiterForm({ ...recruiterForm, name: e.target.value })} />
-                  <TextField label="Email" size="small" fullWidth sx={{ mt: 1 }} value={recruiterForm.email} onChange={(e) => setRecruiterForm({ ...recruiterForm, email: e.target.value })} />
-                  <TextField label="Phone" size="small" fullWidth sx={{ mt: 1 }} value={recruiterForm.phone} onChange={(e) => setRecruiterForm({ ...recruiterForm, phone: e.target.value })} />
-                  <Button variant="contained" sx={{ mt: 1 }} onClick={() => submit(() => adminService.createRecruiter(recruiterForm), 'Recruiter added')}>Create</Button>
+                  <TextField label="Name" size="small" fullWidth sx={{ mt: 2 }} value={recruiterForm.name} onChange={(e) => setRecruiterForm({ ...recruiterForm, name: e.target.value })} />
+                  <TextField label="Email" size="small" fullWidth sx={{ mt: 2 }} value={recruiterForm.email} onChange={(e) => setRecruiterForm({ ...recruiterForm, email: e.target.value })} />
+                  <TextField label="Phone" size="small" fullWidth sx={{ mt: 2 }} value={recruiterForm.phone} onChange={(e) => setRecruiterForm({ ...recruiterForm, phone: e.target.value })} />
+                  <Button 
+                    variant="contained" 
+                    color="warning"
+                    fullWidth
+                    sx={{ mt: 2 }} 
+                    disabled={!recruiterForm.company_id || !recruiterForm.name}
+                    onClick={() => submit(() => adminService.createRecruiter(recruiterForm), 'Recruiter added')}
+                  >
+                    Create Recruiter
+                  </Button>
                 </Paper>
               </Grid>
 
               <Grid item xs={12}>
-                <Paper sx={{ p: 2 }}>
-                  <Typography variant="h6">Departments & Batches</Typography>
-                  <Divider sx={{ my: 1 }} />
-                  <Grid container spacing={2}>
+                <Paper elevation={2} sx={{ p: 3, borderRadius: 2 }}>
+                  <Typography variant="h6" fontWeight={600} mb={2}>Departments & Batches Data</Typography>
+                  <Divider sx={{ my: 2 }} />
+                  <Grid container spacing={3}>
                     <Grid item xs={12} md={6}>
-                      <TableContainer>
-                        <Table size="small">
-                          <TableHead><TableRow><TableCell>Code</TableCell><TableCell>Name</TableCell></TableRow></TableHead>
-                          <TableBody>{departments.map((d) => <TableRow key={d.id}><TableCell>{d.code}</TableCell><TableCell>{d.name}</TableCell></TableRow>)}</TableBody>
+                      <Typography variant="subtitle2" color="primary.main" fontWeight={600} mb={1.5}>
+                        Departments ({departments.length})
+                      </Typography>
+                      <TableContainer sx={{ maxHeight: 320, border: '1px solid', borderColor: 'divider', borderRadius: 1 }}>
+                        <Table size="small" stickyHeader>
+                          <TableHead>
+                            <TableRow>
+                              <TableCell sx={{ fontWeight: 700, bgcolor: 'primary.main', color: 'white' }}>Code</TableCell>
+                              <TableCell sx={{ fontWeight: 700, bgcolor: 'primary.main', color: 'white' }}>Name</TableCell>
+                            </TableRow>
+                          </TableHead>
+                          <TableBody>
+                            {departments.map((d) => (
+                              <TableRow key={d.id} hover>
+                                <TableCell><Chip label={d.code} size="small" color="primary" variant="outlined" /></TableCell>
+                                <TableCell>{d.name}</TableCell>
+                              </TableRow>
+                            ))}
+                          </TableBody>
                         </Table>
                       </TableContainer>
                     </Grid>
                     <Grid item xs={12} md={6}>
-                      <TableContainer>
-                        <Table size="small">
-                          <TableHead><TableRow><TableCell>Batch</TableCell><TableCell>Years</TableCell><TableCell>Grad</TableCell></TableRow></TableHead>
-                          <TableBody>{batches.map((b) => <TableRow key={b.id}><TableCell>{b.batch_label}</TableCell><TableCell>{b.start_year}-{b.end_year}</TableCell><TableCell>{b.graduation_year}</TableCell></TableRow>)}</TableBody>
+                      <Typography variant="subtitle2" color="success.main" fontWeight={600} mb={1.5}>
+                        Batches ({batches.length})
+                      </Typography>
+                      <TableContainer sx={{ maxHeight: 320, border: '1px solid', borderColor: 'divider', borderRadius: 1 }}>
+                        <Table size="small" stickyHeader>
+                          <TableHead>
+                            <TableRow>
+                              <TableCell sx={{ fontWeight: 700, bgcolor: 'success.main', color: 'white' }}>Batch</TableCell>
+                              <TableCell sx={{ fontWeight: 700, bgcolor: 'success.main', color: 'white' }}>Years</TableCell>
+                              <TableCell sx={{ fontWeight: 700, bgcolor: 'success.main', color: 'white' }}>Grad</TableCell>
+                            </TableRow>
+                          </TableHead>
+                          <TableBody>
+                            {batches.map((b) => (
+                              <TableRow key={b.id} hover>
+                                <TableCell><Chip label={b.batch_label} size="small" color="success" variant="outlined" /></TableCell>
+                                <TableCell>{b.start_year}-{b.end_year}</TableCell>
+                                <TableCell><strong>{b.graduation_year}</strong></TableCell>
+                              </TableRow>
+                            ))}
+                          </TableBody>
                         </Table>
                       </TableContainer>
                     </Grid>
