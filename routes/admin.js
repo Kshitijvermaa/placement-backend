@@ -195,10 +195,25 @@ router.post('/recruiters', auth, isAdmin, asyncHandler(async (req, res) => {
 
 router.get('/placement-statuses', auth, isAdmin, asyncHandler(async (req, res) => {
   const rows = await query(`
-    SELECT ps.*, u.name, s.reg_number
+    SELECT 
+      ps.*,
+      u.name AS student_name,
+      s.reg_number,
+      s.branch,
+      s.cgpa,
+      CASE 
+        WHEN ps.final_application_id IS NOT NULL THEN o.title
+        ELSE NULL
+      END AS placed_company,
+      CASE 
+        WHEN ps.final_application_id IS NOT NULL THEN o.stipend
+        ELSE NULL
+      END AS package_amount
     FROM placement_statuses ps
     JOIN students s ON s.id = ps.student_id
     JOIN users u ON u.id = s.user_id
+    LEFT JOIN applications a ON a.id = ps.final_application_id
+    LEFT JOIN offers o ON o.id = a.offer_id
     ORDER BY ps.updated_at DESC
   `);
   res.json(rows);
